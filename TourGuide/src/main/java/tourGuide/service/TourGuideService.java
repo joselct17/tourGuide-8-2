@@ -22,8 +22,8 @@ import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.tracker.Tracker;
-import tourGuide.user.User;
-import tourGuide.user.UserReward;
+import tourGuide.model.user.User;
+import tourGuide.model.user.UserReward;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
@@ -99,6 +99,17 @@ public class TourGuideService {
 		}
 		
 		return nearbyAttractions;
+	}
+
+	public Map<UUID, Location> getAllCurrentLocations() {
+
+		Map<UUID, Location> mapUserUuidLocation = new HashMap<>();
+		internalUserMap.forEach((id, user) ->
+				mapUserUuidLocation.put(user.getUserId(), getUserLocation(user).location)
+		);
+
+		return mapUserUuidLocation;
+
 	}
 	
 	private void addShutDownHook() {
