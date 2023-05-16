@@ -31,6 +31,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
+    implementation 'org.projectlombok:lombok:1.18.26'
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-actuator")
     compile group: 'org.javamoney', name: 'moneta', version: '1.3'
