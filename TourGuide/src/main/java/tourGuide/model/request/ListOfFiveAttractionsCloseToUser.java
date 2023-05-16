@@ -1,8 +1,13 @@
 package tourGuide.model.request;
 
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.util.ArrayList;
 
+@NoArgsConstructor
+@AllArgsConstructor
 public class ListOfFiveAttractionsCloseToUser {
     private ArrayList<AttractionWithDistanceToUser> listOfAttractionsCloseToUser;
 
