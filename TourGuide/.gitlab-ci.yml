@@ -1,0 +1,22 @@
+stages:
+  - build
+  - test
+  - package
+
+build:
+  stage: build
+  script:
+    - mvn clean compile
+
+test:
+  stage: test
+  script:
+    - mvn test
+
+package:
+  stage: package
+  script:
+    - mvn package
+  artifacts:
+    paths:
+      - target/*.jar
