@@ -2,13 +2,7 @@ package tourGuide.service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,7 +14,10 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
+import org.w3c.dom.Attr;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.model.request.AttractionWithDistanceToUser;
+import tourGuide.model.request.ListOfFiveAttractionsCloseToUser;
 import tourGuide.tracker.Tracker;
 import tourGuide.model.user.User;
 import tourGuide.model.user.UserReward;
@@ -30,13 +27,13 @@ import tripPricer.TripPricer;
 @Service
 public class TourGuideService {
 	private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
-	private final GpsUtil gpsUtil;
+	private final GpsUtilsService gpsUtil;
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
 	
-	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+	public TourGuideService(GpsUtilsService gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsService = rewardsService;
 		
@@ -90,16 +87,16 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> nearbyAttractions = new ArrayList<>();
-		for(Attraction attraction : gpsUtil.getAttractions()) {
-			if(rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
-			}
-		}
-		
-		return nearbyAttractions;
-	}
+//	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
+//		List<Attraction> nearbyAttractions = new ArrayList<>();
+//		for(Attraction attraction : gpsUtil.getAttractions()) {
+//			if(rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
+//				nearbyAttractions.add(attraction);
+//			}
+//		}
+//
+//		return nearbyAttractions;
+//	}
 
 	public Map<UUID, Location> getAllCurrentLocations() {
 
@@ -111,6 +108,47 @@ public class TourGuideService {
 		return mapUserUuidLocation;
 
 	}
+
+	public ListOfFiveAttractionsCloseToUser getNearByAttractions(VisitedLocation visitedLocation) {
+
+		ArrayList<AttractionWithDistanceToUser> listOfAttractionsWithDistance = new ArrayList<>();
+
+		List<Attraction> allAttractions = gpsUtil.getListOfAttractions();
+
+		for (Attraction attraction : allAttractions) {
+			Location attractionLocation = new Location(attraction.latitude, attraction.longitude);
+
+			Location locationOfVisitedLocation = new Location(visitedLocation.location.latitude, visitedLocation.location.longitude);
+
+			double distance = rewardsService.getDistance(locationOfVisitedLocation, attractionLocation);
+
+			AttractionWithDistanceToUser attractionWithDistanceToUser = new AttractionWithDistanceToUser();
+
+			attractionWithDistanceToUser.setNameOfTouristAttraction(attraction.attractionName);
+
+			attractionWithDistanceToUser.setLocationOfTouristAttraction(attractionLocation);
+
+			attractionWithDistanceToUser.setDistanceInMilesBetweenTheUsersLocationAndThisAttraction(distance);
+
+			listOfAttractionsWithDistance.add(attractionWithDistanceToUser);
+
+
+		}
+		Comparator<AttractionWithDistanceToUser> byDistance = Comparator.comparing(AttractionWithDistanceToUser::getDistanceInMilesBetweenTheUsersLocationAndThisAttraction);
+		Collections.sort(listOfAttractionsWithDistance, byDistance);
+		ListOfFiveAttractionsCloseToUser listOfFiveAttractionsCloseToUser = new ListOfFiveAttractionsCloseToUser();
+		ArrayList<AttractionWithDistanceToUser> listOfObjects = new ArrayList<>();
+
+		for (int i = 0; i<5 && i < allAttractions.size(); i++) {
+			listOfObjects.add(listOfAttractionsWithDistance.get(i));
+
+		}
+		listOfFiveAttractionsCloseToUser.setListOfAttractionsCloseToUser(listOfObjects);
+
+		return listOfFiveAttractionsCloseToUser;
+
+	}
+
 	
 	private void addShutDownHook() {
 		Runtime.getRuntime().addShutdownHook(new Thread() { 
