@@ -10,7 +10,7 @@
 # https://gradle.org/
 # https://github.com/gradle/gradle
 
-image: gradle:alpine
+image: gradle:6.8.3-jdk11
 
 before_script:
   - GRADLE_USER_HOME="$(pwd)/.gradle"
@@ -18,7 +18,7 @@ before_script:
 
 build:
   stage: build
-  script: gradle --build-cache assemble
+  script: gradle  --build-file=TourGuide/build.gradle --build-cache assemble
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: push
@@ -28,7 +28,7 @@ build:
 
 test:
   stage: test
-  script: gradle check
+  script: gradle --build-file=TourGuide/build.gradle test
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
@@ -40,3 +40,4 @@ deploy:
   stage: deploy
   script: echo "Define your deployment script!"
   environment: production
+
