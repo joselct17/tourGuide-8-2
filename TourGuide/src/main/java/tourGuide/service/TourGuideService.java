@@ -101,42 +101,61 @@ public class TourGuideService {
 
 	public ListOfFiveAttractionsCloseToUser getNearByAttractions(VisitedLocation visitedLocation) {
 
+		// Créer une liste vide pour stocker les attractions avec leur distance par rapport à l'utilisateur
 		ArrayList<AttractionWithDistanceToUser> listOfAttractionsWithDistance = new ArrayList<>();
 
+		// Récupérer la liste de toutes les attractions depuis gpsUtil
 		List<Attraction> allAttractions = gpsUtil.getListOfAttractions();
 
+		// Parcourir toutes les attractions
 		for (Attraction attraction : allAttractions) {
+			// Créer un objet Location pour l'emplacement de l'attraction
 			Location attractionLocation = new Location(attraction.latitude, attraction.longitude);
 
+			// Créer un objet Location pour l'emplacement du VisitedLocation fourni
 			Location locationOfVisitedLocation = new Location(visitedLocation.location.latitude, visitedLocation.location.longitude);
 
+			// Calculer la distance entre le VisitedLocation et l'attraction en utilisant rewardsService
 			double distance = rewardsService.getDistance(locationOfVisitedLocation, attractionLocation);
 
+			// Créer un nouvel objet AttractionWithDistanceToUser
 			AttractionWithDistanceToUser attractionWithDistanceToUser = new AttractionWithDistanceToUser();
 
+			// Définir le nom de l'attraction dans AttractionWithDistanceToUser
 			attractionWithDistanceToUser.setNameOfTouristAttraction(attraction.attractionName);
 
+			// Définir l'emplacement de l'attraction dans AttractionWithDistanceToUser
 			attractionWithDistanceToUser.setLocationOfTouristAttraction(attractionLocation);
 
+			// Définir la distance entre l'emplacement de l'utilisateur et l'attraction dans AttractionWithDistanceToUser
 			attractionWithDistanceToUser.setDistanceInMilesBetweenTheUsersLocationAndThisAttraction(distance);
 
+			// Ajouter l'objet AttractionWithDistanceToUser à la liste listOfAttractionsWithDistance
 			listOfAttractionsWithDistance.add(attractionWithDistanceToUser);
-
-
 		}
+
+		// Définir le comparateur pour trier les attractions par distance
 		Comparator<AttractionWithDistanceToUser> byDistance = Comparator.comparing(AttractionWithDistanceToUser::getDistanceInMilesBetweenTheUsersLocationAndThisAttraction);
+
+		// Trier la liste des attractions avec leur distance en utilisant le comparateur
 		Collections.sort(listOfAttractionsWithDistance, byDistance);
+
+		// Créer un nouvel objet ListOfFiveAttractionsCloseToUser
 		ListOfFiveAttractionsCloseToUser listOfFiveAttractionsCloseToUser = new ListOfFiveAttractionsCloseToUser();
+
+		// Créer une liste vide pour stocker les cinq attractions les plus proches
 		ArrayList<AttractionWithDistanceToUser> listOfObjects = new ArrayList<>();
 
-		for (int i = 0; i<5 && i < allAttractions.size(); i++) {
+		// Parcourir les attractions triées et ajouter les cinq premières à la liste des cinq attractions les plus proches
+		for (int i = 0; i < 5 && i < allAttractions.size(); i++) {
 			listOfObjects.add(listOfAttractionsWithDistance.get(i));
-
 		}
+
+		// Définir la liste des cinq attractions les plus proches dans l'objet listOfFiveAttractionsCloseToUser
 		listOfFiveAttractionsCloseToUser.setListOfAttractionsCloseToUser(listOfObjects);
 
+		// Retourner l'objet listOfFiveAttractionsCloseToUser
 		return listOfFiveAttractionsCloseToUser;
-
 	}
 
 	
