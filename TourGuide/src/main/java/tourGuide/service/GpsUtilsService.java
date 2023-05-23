@@ -27,14 +27,6 @@ public class GpsUtilsService {
         return gpsUtil.getUserLocation(userId);
     }
 
-    public void getUserLocation(User user, TourGuideService tourGuideService) {
-        CompletableFuture.supplyAsync(() -> {
-            return gpsUtil.getUserLocation(user.getUserId());
-        },
-                executorService).thenAccept(visitedLocation -> {
-                    tourGuideService.trackUserLocation(user);
-        });
-    }
 
     public List<Attraction> getListOfAttractions() {
         return gpsUtil.getAttractions();
