@@ -17,7 +17,7 @@ public class GpsUtilsService {
 
     GpsUtil gpsUtil;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(1000);
+    //private final ExecutorService executorService = Executors.newFixedThreadPool(1000);
 
     public GpsUtilsService() {
         gpsUtil = new GpsUtil();

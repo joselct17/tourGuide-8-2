@@ -14,7 +14,6 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
-import org.w3c.dom.Attr;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.request.AttractionWithDistanceToUser;
 import tourGuide.model.request.ListOfFiveAttractionsCloseToUser;
@@ -28,12 +27,13 @@ import tripPricer.TripPricer;
 public class TourGuideService {
 	private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
 	private final GpsUtilsService gpsUtil;
+
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
 	
-	public TourGuideService(GpsUtilsService gpsUtil, RewardsService rewardsService) {
+	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
 		this.rewardsService = rewardsService;
 		

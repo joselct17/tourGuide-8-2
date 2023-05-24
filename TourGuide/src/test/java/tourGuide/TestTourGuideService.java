@@ -6,11 +6,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.Ignore;
+import gpsUtil.GpsUtil;
 import org.junit.Test;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
 import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
@@ -24,7 +22,7 @@ public class TestTourGuideService {
 
 	@Test
 	public void getUserLocation() {
-		GpsUtilsService gpsUtil = new GpsUtilsService();
+		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
@@ -37,7 +35,7 @@ public class TestTourGuideService {
 	
 	@Test
 	public void addUser() {
-		GpsUtilsService gpsUtil = new GpsUtilsService();
+		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
@@ -59,7 +57,7 @@ public class TestTourGuideService {
 	
 	@Test
 	public void getAllUsers() {
-		GpsUtilsService gpsUtil = new GpsUtilsService();
+		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
@@ -80,7 +78,7 @@ public class TestTourGuideService {
 	
 	@Test
 	public void trackUser() {
-		GpsUtilsService gpsUtil = new GpsUtilsService();
+		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
@@ -112,7 +110,7 @@ public class TestTourGuideService {
 //	}
 	
 	public void getTripDeals() {
-		GpsUtilsService gpsUtil = new GpsUtilsService();
+		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
