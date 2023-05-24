@@ -26,7 +26,7 @@ import tripPricer.TripPricer;
 @Service
 public class TourGuideService {
 	private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
-	private final GpsUtilsService gpsUtil;
+	private final GpsUtil gpsUtil;
 
 	private final RewardsService rewardsService;
 	private final TripPricer tripPricer = new TripPricer();
@@ -105,7 +105,7 @@ public class TourGuideService {
 		ArrayList<AttractionWithDistanceToUser> listOfAttractionsWithDistance = new ArrayList<>();
 
 		// Récupérer la liste de toutes les attractions depuis gpsUtil
-		List<Attraction> allAttractions = gpsUtil.getListOfAttractions();
+		List<Attraction> allAttractions = gpsUtil.getAttractions();
 
 		// Parcourir toutes les attractions
 		for (Attraction attraction : allAttractions) {

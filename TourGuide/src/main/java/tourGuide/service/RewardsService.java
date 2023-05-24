@@ -24,7 +24,7 @@ public class RewardsService {
     private int defaultProximityBuffer = 10;
 	private int proximityBuffer = defaultProximityBuffer;
 	private int attractionProximityRange = 200;
-	private final GpsUtilsService gpsUtil;
+	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
 
 	private final ExecutorService executorService = Executors.newFixedThreadPool(10000);
@@ -45,7 +45,7 @@ public class RewardsService {
 	
 	public void calculateRewards(User user) {
 		List<VisitedLocation> userLocations = user.getVisitedLocations().stream().collect(Collectors.toList());
-		List<Attraction> attractions = gpsUtil.getListOfAttractions();
+		List<Attraction> attractions = gpsUtil.getAttractions();
 		
 		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
