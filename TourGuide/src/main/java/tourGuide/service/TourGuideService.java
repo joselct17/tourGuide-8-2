@@ -3,6 +3,8 @@ package tourGuide.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -80,11 +82,36 @@ public class TourGuideService {
 		return providers;
 	}
 	
+//	public VisitedLocation trackUserLocation(User user) {
+//		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+//		user.addToVisitedLocations(visitedLocation);
+//		rewardsService.calculateRewards(user);
+//		return visitedLocation;
+//	}
+
 	public VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
-		return visitedLocation;
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+
+		// Tâche pour récupérer la location de l'utilisateur
+		Runnable getUserLocationTask = () -> {
+			VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+			user.addToVisitedLocations(visitedLocation);
+		};
+
+		// Tâche pour calculer les récompenses de l'utilisateur
+		Runnable calculateRewardsTask = () -> rewardsService.calculateRewards(user);
+
+		// Exécution des tâches en parallèle
+		executor.submit(getUserLocationTask);
+		executor.submit(calculateRewardsTask);
+
+		// Attente de la fin de toutes les tâches
+		executor.shutdown();
+		while (!executor.isTerminated()) {
+			// Attendre la fin de toutes les tâches
+		}
+
+		return user.getLastVisitedLocation();
 	}
 
 
