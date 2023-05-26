@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class RewardsService {
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(10000);
+	private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
 
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
@@ -43,7 +44,7 @@ public class RewardsService {
 		proximityBuffer = defaultProximityBuffer;
 	}
 	
-	public void calculateRewards(User user) {
+	public void calculateRewardss(User user) {
 		List<VisitedLocation> userLocations = user.getVisitedLocations().stream().collect(Collectors.toList());
 		List<Attraction> attractions = gpsUtil.getAttractions();
 		
@@ -55,6 +56,35 @@ public class RewardsService {
 					}
 				}
 			}
+		}
+	}
+
+
+	public void calculateRewards(User user) {
+		List<VisitedLocation> userLocations = user.getVisitedLocations().stream().collect(Collectors.toList());
+		List<Attraction> attractions = gpsUtil.getAttractions();
+		List<Attraction> unvisitedAttractions = attractions.stream()
+				.filter(attraction -> user.getUserRewards().stream()
+						.noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName)))
+				.collect(Collectors.toList());
+
+		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+		for (VisitedLocation visitedLocation : userLocations) {
+			for (Attraction attraction : unvisitedAttractions) {
+				executor.submit(() -> {
+					if (nearAttraction(visitedLocation, attraction)) {
+						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
+					}
+				});
+			}
+		}
+
+		executor.shutdown();
+		try {
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
+			// Handle interruption
 		}
 	}
 
