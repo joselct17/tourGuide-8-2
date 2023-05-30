@@ -3,6 +3,8 @@ package tourGuide.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -34,6 +36,8 @@ public class TourGuideService {
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
+
+	private final ExecutorService executorService = Executors.newFixedThreadPool(60);
 	
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -52,14 +56,13 @@ public class TourGuideService {
 	public List<UserReward> getUserRewards(User user) {
 		return user.getUserRewards();
 	}
-	
+
 	public VisitedLocation getUserLocation(User user) {
-		VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ?
-			user.getLastVisitedLocation() :
-			trackUserLocation(user);
+		VisitedLocation visitedLocation = (user.getVisitedLocations().size()>0)?
+				user.getLastVisitedLocation():trackUserLocation(user).join();
 		return visitedLocation;
 	}
-	
+
 	public User getUser(String userName) {
 		return internalUserMap.get(userName);
 	}
@@ -81,37 +84,29 @@ public class TourGuideService {
 		user.setTripDeals(providers);
 		return providers;
 	}
-	
-//	public VisitedLocation trackUserLocation(User user) {
-//		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-//		user.addToVisitedLocations(visitedLocation);
-//		rewardsService.calculateRewards(user);
-//		return visitedLocation;
-//	}
 
-	public VisitedLocation trackUserLocation(User user) {
-		ExecutorService executor = Executors.newFixedThreadPool(2);
 
-		// Tâche pour récupérer la location de l'utilisateur
-		Runnable getUserLocationTask = () -> {
-			VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-			user.addToVisitedLocations(visitedLocation);
-		};
 
-		// Tâche pour calculer les récompenses de l'utilisateur
-		Runnable calculateRewardsTask = () -> rewardsService.calculateRewards(user);
+	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
 
-		// Exécution des tâches en parallèle
-		executor.submit(getUserLocationTask);
-		executor.submit(calculateRewardsTask);
+		// Création d'un CompletableFuture pour la localisation visitée
+		CompletableFuture<VisitedLocation> visitedLocationCompletableFuture = CompletableFuture.supplyAsync(() -> {
+					VisitedLocation location = gpsUtil.getUserLocation(user.getUserId());
+					return location;
+				}, executorService)
 
-		// Attente de la fin de toutes les tâches
-		executor.shutdown();
-		while (!executor.isTerminated()) {
-			// Attendre la fin de toutes les tâches
-		}
+				// Enchaînement asynchrone pour ajouter la localisation visitée à l'utilisateur
+				.thenApplyAsync((location) -> {
+					user.addToVisitedLocations(location);
 
-		return user.getLastVisitedLocation();
+					// Calcul des récompenses pour l'utilisateur en utilisant rewardsService.calculateRewards(user)
+					rewardsService.calculateRewards(user).join();
+
+					return location;
+				}, rewardsService.getExecutor());
+
+		// Retourne le CompletableFuture pour la localisation visitée
+		return visitedLocationCompletableFuture;
 	}
 
 
@@ -237,5 +232,7 @@ public class TourGuideService {
 		LocalDateTime localDateTime = LocalDateTime.now().minusDays(new Random().nextInt(30));
 	    return Date.from(localDateTime.toInstant(ZoneOffset.UTC));
 	}
+
+
 	
 }
