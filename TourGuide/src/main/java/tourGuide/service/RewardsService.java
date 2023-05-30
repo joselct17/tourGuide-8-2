@@ -26,7 +26,7 @@ public class RewardsService {
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(60);
+	private final ExecutorService executorService = Executors.newFixedThreadPool(100);
 
 
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
@@ -57,41 +57,7 @@ public class RewardsService {
 //		}
 //	}
 
-	public CompletableFuture<Void> calculateRewardss(User user) {
-		// Récupération des localisations visitées par l'utilisateur
-		List<VisitedLocation> userLocations = user.getVisitedLocations().stream().collect(Collectors.toList());
 
-		// Récupération de la liste des attractions depuis gpsUtil
-		List<Attraction> attractions = gpsUtil.getAttractions();
-
-		// Liste des CompletableFuture pour les tâches asynchrones
-		List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-		// Parcours des localisations visitées par l'utilisateur
-		for (VisitedLocation visitedLocation : userLocations) {
-
-			// Parcours des attractions
-			for (Attraction attraction : attractions) {
-				// Vérification si l'utilisateur n'a pas déjà une récompense pour cette attraction
-				if (user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
-					// Vérification si la localisation visitée est proche de l'attraction
-					if (nearAttraction(visitedLocation, attraction)) {
-						// Création d'un CompletableFuture pour ajouter la récompense à l'utilisateur
-						CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-							user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-						}, executorService);
-
-						// Ajout du CompletableFuture à la liste des futures
-						futures.add(future);
-						break;
-					}
-				}
-			}
-		}
-
-		// Retourne un CompletableFuture qui sera complété lorsque tous les CompletableFuture dans la liste auront terminé
-		return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
-	}
 
 	public CompletableFuture<Void> calculateRewards(User user) {
 		// Récupération des localisations visitées par l'utilisateur
@@ -109,14 +75,14 @@ public class RewardsService {
 			// Parcours des attractions
 			for (Attraction attraction : attractions) {
 				// Vérification si l'utilisateur n'a pas déjà une récompense pour cette attraction
-				if (user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
+				if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
 					// Vérification si la localisation visitée est proche de l'attraction
 					if (nearAttraction(visitedLocation, attraction)) {
 						// Création d'un CompletableFuture pour ajouter la récompense à l'utilisateur
 						CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-							user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
+							UserReward userReward = new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user));
+							user.addUserReward(userReward);
 						}, executorService);
-
 						// Ajout du CompletableFuture à la liste des futures
 						futures.add(future);
 						break;
@@ -124,9 +90,9 @@ public class RewardsService {
 				}
 			}
 		}
-
+		CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 		// Retourne un CompletableFuture qui sera complété lorsque tous les CompletableFuture dans la liste auront terminé
-		return CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
+		return allFutures;
 	}
 
 

@@ -37,7 +37,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(60);
+	private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -85,6 +85,12 @@ public class TourGuideService {
 		return providers;
 	}
 
+//	public VisitedLocation trackUserLocation(User user) {
+//		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+//		user.addToVisitedLocations(visitedLocation);
+//		rewardsService.calculateRewards(user);
+//		return visitedLocation;
+//	}
 
 
 	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
