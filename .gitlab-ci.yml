@@ -42,6 +42,8 @@ deploy:
   environment: production
 
 
-artifacts:
-  paths:
-    - C:\Users\josel\Documents\Jose\OpenClassroom\PROJET_8\definitve\tourGuide-8
+job:
+  artifacts:
+    name: "$CI_JOB_NAME"
+    paths:
+      - binaries/
