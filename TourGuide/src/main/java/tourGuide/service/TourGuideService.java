@@ -90,9 +90,14 @@ public class TourGuideService {
 //	}
 
 
+
 	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
 
-		// Création d'un CompletableFuture pour la localisation visitée
+		// Création d'un CompletableFuture pour la localisation visitée,
+		// CompletableFuture est une classe qui permet la programmation asynchrone et le traitement paralléle des taches.
+		// Ils permettent d'exécuter des opérations de manière asynchrone, d'enchaîner des opérations les unes après
+		// les autres et de combiner les résultats de plusieurs opérations.
+		//CompletableFuture.supplyAsync() pour une opération qui retourne une valeur
 		CompletableFuture<VisitedLocation> visitedLocationCompletableFuture = CompletableFuture.supplyAsync(() -> {
 					VisitedLocation location = gpsUtil.getUserLocation(user.getUserId());
 					return location;
@@ -103,14 +108,16 @@ public class TourGuideService {
 					user.addToVisitedLocations(location);
 
 					// Calcul des récompenses pour l'utilisateur en utilisant rewardsService.calculateRewards(user)
-					rewardsService.calculateRewards( user).join();
+					//.join() est utilisé pour attendre la fin de l'execution d'un CompletableFuture dans ce cas la c'est calculateRewars(user) et recuperer la valeur du resultat
+					rewardsService.calculateRewards(user).join();
 
 					return location;
-				}, rewardsService.getExecutor());
+				});
 
 		// Retourne le CompletableFuture pour la localisation visitée
 		return visitedLocationCompletableFuture;
 	}
+
 
 
 	public Map<String, Location> getAllCurrentLocations() {
