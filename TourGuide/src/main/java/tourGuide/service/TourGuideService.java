@@ -113,15 +113,12 @@ public class TourGuideService {
 	}
 
 
-	public Map<UUID, Location> getAllCurrentLocations() {
-
-		Map<UUID, Location> mapUserUuidLocation = new HashMap<>();
+	public Map<String, Location> getAllCurrentLocations() {
+		Map<String, Location> mapUserUuidLocation = new HashMap<>();
 		internalUserMap.forEach((id, user) ->
-				mapUserUuidLocation.put(user.getUserId(), getUserLocation(user).location)
+				mapUserUuidLocation.put(user.getUserId().toString(), getUserLocation(user).location)
 		);
-
 		return mapUserUuidLocation;
-
 	}
 
 	public ListOfFiveAttractionsCloseToUser getNearByAttractions(VisitedLocation visitedLocation) {
