@@ -41,3 +41,7 @@ deploy:
   script: echo "Define your deployment script!"
   environment: production
 
+
+artifacts:
+  paths:
+    - C:\Users\josel\Documents\Jose\OpenClassroom\PROJET_8\definitve\tourGuide-8
