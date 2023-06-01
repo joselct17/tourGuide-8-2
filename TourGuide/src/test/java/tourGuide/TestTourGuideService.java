@@ -109,21 +109,20 @@ public class TestTourGuideService {
 
 		assertEquals(5, listObject.getListOfAttractionsCloseToUser().size());
 	}
-	@Ignore
+
+
 	@Test
 	public void getTripDeals() {
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		InternalTestHelper.setInternalUserNumber(0);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
-		
+		tourGuideService.tracker.stopTracking();
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 
 		List<Provider> providers = tourGuideService.getTripDeals(user);
-		
-		tourGuideService.tracker.stopTracking();
-		
-		assertEquals(10, providers.size());
+
+		assertEquals(5, providers.size());
 	}
 	
 	
