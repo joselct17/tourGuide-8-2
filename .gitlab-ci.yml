@@ -35,6 +35,9 @@ test:
     paths:
       - build
       - .gradle
+  artifacts:
+    paths:
+      - build/jacoco/jacoco.xml
 
 deploy:
   stage: deploy
