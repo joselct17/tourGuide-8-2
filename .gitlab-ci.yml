@@ -42,7 +42,6 @@ deploy:
   environment: production
 
 
-job:
   artifacts:
     name: "$CI_JOB_NAME"
     paths:
