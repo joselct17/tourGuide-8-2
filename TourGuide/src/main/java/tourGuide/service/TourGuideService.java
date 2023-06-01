@@ -112,7 +112,7 @@ public class TourGuideService {
 					rewardsService.calculateRewards(user).join();
 
 					return location;
-				});
+				}, rewardsService.getExecutor());
 
 		// Retourne le CompletableFuture pour la localisation visitée
 		return visitedLocationCompletableFuture;

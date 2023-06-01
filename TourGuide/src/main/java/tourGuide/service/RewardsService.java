@@ -59,28 +59,42 @@ public class RewardsService {
 //	}
 
 	public CompletableFuture<Void> calculateRewards(User user) {
+		// Récupération des localisations visitées par l'utilisateur
 		List<VisitedLocation> userLocations = user.getVisitedLocations();
+
+		// Récupération des attractions disponibles
 		List<Attraction> attractions = gpsUtil.getAttractions();
 
-		List<CompletableFuture<Void>> futures = new ArrayList<>();
+		// Liste des CompletableFuture pour les tâches asynchrones
+		List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
 
+		// Parcours des localisations visitées
 		for (VisitedLocation visitedLocation : userLocations) {
+			// Parcours des attractions
 			for (Attraction attraction : attractions) {
+				// Vérification si l'utilisateur n'a pas déjà une récompense pour cette attraction
 				if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+					// Vérification si l'attraction est proche de la localisation visitée
 					if (nearAttraction(visitedLocation, attraction)) {
+						// Création d'un CompletableFuture pour ajouter une récompense à l'utilisateur
 						CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+							// Création de la récompense utilisateur
 							UserReward userReward = new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user));
+							// Ajout de la récompense à l'utilisateur
 							user.addUserReward(userReward);
 						}, executorService);
-						futures.add(future);
+						// Ajout du CompletableFuture à la liste
+						completableFutures.add(future);
 					}
 				}
 			}
 		}
 
-		CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+		// Attente de la complétion de tous les CompletableFuture
+		CompletableFuture<Void> allFutures = CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0]));
 		return allFutures;
 	}
+
 
 
 
