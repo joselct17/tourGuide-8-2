@@ -2,6 +2,7 @@ package tourGuide.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class RewardsService {
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(100);
+	private final ExecutorService executorService = Executors.newFixedThreadPool(1000);
 
 
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
@@ -57,44 +58,65 @@ public class RewardsService {
 //		}
 //	}
 
-
-
 	public CompletableFuture<Void> calculateRewards(User user) {
-		// Récupération des localisations visitées par l'utilisateur
-		List<VisitedLocation> userLocations = user.getVisitedLocations().stream().collect(Collectors.toList());
-
-		// Récupération de la liste des attractions depuis gpsUtil
+		List<VisitedLocation> userLocations = user.getVisitedLocations();
 		List<Attraction> attractions = gpsUtil.getAttractions();
 
-		// Liste des CompletableFuture pour les tâches asynchrones
 		List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-		// Parcours des localisations visitées par l'utilisateur
 		for (VisitedLocation visitedLocation : userLocations) {
-
-			// Parcours des attractions
 			for (Attraction attraction : attractions) {
-				// Vérification si l'utilisateur n'a pas déjà une récompense pour cette attraction
 				if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-					// Vérification si la localisation visitée est proche de l'attraction
 					if (nearAttraction(visitedLocation, attraction)) {
-						// Création d'un CompletableFuture pour ajouter la récompense à l'utilisateur
 						CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
 							UserReward userReward = new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user));
 							user.addUserReward(userReward);
 						}, executorService);
-						// Ajout du CompletableFuture à la liste des futures
 						futures.add(future);
-						break;
 					}
 				}
 			}
 		}
+
 		CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-		// Retourne un CompletableFuture qui sera complété lorsque tous les CompletableFuture dans la liste auront terminé
 		return allFutures;
 	}
 
+
+
+
+//	public void calculateRewardsss(List<User> userList) {
+//
+//		List<Attraction> attractions = gpsUtil.getAttractions();
+//		List<Future<?>> listFuture = new ArrayList<>();
+//
+//		for(User user : userList) {
+//			Future<?> future = executorService.submit( () -> {
+//
+//				for(Attraction attraction : attractions) {
+//					//this condition is needed to avoid useless call to reward calculation that won't be stored...
+//					if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+//						//rewards are calculated on the last Location only:
+//						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size()-1);
+//						if(nearAttraction(lastVisitedLocation, attraction)) {
+//							user.addUserReward(new UserReward(lastVisitedLocation, attraction, getRewardPoints(attraction, user)));
+//						}
+//					}
+//				}
+//			});
+//			listFuture.add(future);
+//		}
+//
+//		listFuture.stream().forEach(f->{
+//			try {
+//				f.get();
+//			} catch (InterruptedException | ExecutionException e) {
+//
+//				e.printStackTrace();
+//			}
+//		});
+//
+//	}
 
 
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
