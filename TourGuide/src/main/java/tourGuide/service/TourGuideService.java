@@ -3,10 +3,7 @@ package tourGuide.service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -106,7 +103,7 @@ public class TourGuideService {
 					user.addToVisitedLocations(location);
 
 					// Calcul des récompenses pour l'utilisateur en utilisant rewardsService.calculateRewards(user)
-					rewardsService.calculateRewards(user).join();
+					rewardsService.calculateRewards( user).join();
 
 					return location;
 				}, rewardsService.getExecutor());
