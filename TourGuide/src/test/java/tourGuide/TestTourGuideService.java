@@ -29,7 +29,7 @@ public class TestTourGuideService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 		
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).join();
+		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
 		tourGuideService.tracker.stopTracking();
 		assertTrue(visitedLocation.userId.equals(user.getUserId()));
 	}
@@ -85,7 +85,7 @@ public class TestTourGuideService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 		
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).join();
+		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
 		
 		tourGuideService.tracker.stopTracking();
 		
@@ -101,7 +101,7 @@ public class TestTourGuideService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).join();
+		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
 
 		ListOfFiveAttractionsCloseToUser listObject = tourGuideService.getNearByAttractions(visitedLocation);
 
@@ -125,5 +125,5 @@ public class TestTourGuideService {
 		assertEquals(5, providers.size());
 	}
 	
-	
+
 }
