@@ -2,6 +2,7 @@ package tourGuide;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -33,10 +34,14 @@ public class TestRewardsService {
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		user.addToVisitedLocations(new VisitedLocation(user.getUserId(), attraction, new Date()));
-		tourGuideService.trackUserLocation(user).join();
-		List<UserReward> userRewards = user.getUserRewards();
+
+		List<User> userList = new ArrayList<>();
+		userList.add(user);
+		rewardsService.calculateRewardsMultiThread(userList);
+
 		tourGuideService.tracker.stopTracking();
-		assertTrue(userRewards.size() == 1);
+		assertTrue(user.getUserRewards().size() == 1);
+
 	}
 
 	
@@ -46,6 +51,23 @@ public class TestRewardsService {
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		assertTrue(rewardsService.isWithinAttractionProximity(attraction, attraction));
+	}
+
+@Ignore
+	@Test
+	public void nearAllAttractions() {
+		GpsUtil gpsUtil = new GpsUtil();
+		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+		rewardsService.setProximityBuffer(Integer.MAX_VALUE);
+
+		InternalTestHelper.setInternalUserNumber(1);
+		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+
+		rewardsService.calculateRewardsMultiThread(tourGuideService.getAllUsers());
+		List<UserReward> userRewards = tourGuideService.getUserRewards(tourGuideService.getAllUsers().get(0));
+		tourGuideService.tracker.stopTracking();
+
+		assertEquals(gpsUtil.getAttractions().size(), userRewards.size());
 	}
 
 
