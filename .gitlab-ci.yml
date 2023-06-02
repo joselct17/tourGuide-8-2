@@ -25,6 +25,9 @@ build:
     paths:
       - build
       - .gradle
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/build/libs/*.jar
 
 test:
   stage: test
@@ -37,7 +40,7 @@ test:
       - .gradle
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/$buildDir/jacocoHtml
+      - $CI_PROJECT_DIR/build/jacocoHtml
 
 deploy:
   stage: deploy
