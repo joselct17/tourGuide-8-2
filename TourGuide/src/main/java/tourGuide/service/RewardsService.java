@@ -43,7 +43,7 @@ public class RewardsService {
 		proximityBuffer = defaultProximityBuffer;
 	}
 	
-//	public void calculateReward(User user) {
+//	public void calculateRewardss(User user) {
 //		List<VisitedLocation> userLocations = user.getVisitedLocations().stream().collect(Collectors.toList());
 //		List<Attraction> attractions = gpsUtil.getAttractions();
 //
@@ -57,80 +57,78 @@ public class RewardsService {
 //			}
 //		}
 //	}
-
-	public CompletableFuture<Void> calculateRewards(User user) {
-		// Récupération des localisations visitées par l'utilisateur
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
-
-		// Récupération des attractions disponibles
-		List<Attraction> attractions = gpsUtil.getAttractions();
-
-		// Liste des CompletableFuture pour les tâches asynchrones
-		List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
-
-		// Parcours des localisations visitées
-		for (VisitedLocation visitedLocation : userLocations) {
-			// Parcours des attractions
-			for (Attraction attraction : attractions) {
-				// Vérification si l'utilisateur n'a pas déjà une récompense pour cette attraction
-				if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-					// Vérification si l'attraction est proche de la localisation visitée
-					if (nearAttraction(visitedLocation, attraction)) {
-						// Création d'un CompletableFuture pour ajouter une récompense à l'utilisateur
-						CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-							// Création de la récompense utilisateur
-							UserReward userReward = new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user));
-							// Ajout de la récompense à l'utilisateur
-							user.addUserReward(userReward);
-						}, executorService);
-						// Ajout du CompletableFuture à la liste
-						completableFutures.add(future);
-					}
-				}
-			}
-		}
-
-		// Attente de la complétion de tous les CompletableFuture
-		CompletableFuture<Void> allFutures = CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0]));
-		return allFutures;
-	}
-
-
-
-
-
-//	public void calculateRewardsss(List<User> userList) {
 //
+//	public CompletableFuture<Void> calculateRewards(User user) {
+//		// Récupération des localisations visitées par l'utilisateur
+//		List<VisitedLocation> userLocations = user.getVisitedLocations();
+//
+//		// Récupération des attractions disponibles
 //		List<Attraction> attractions = gpsUtil.getAttractions();
-//		List<Future<?>> listFuture = new ArrayList<>();
 //
-//		for(User user : userList) {
-//			Future<?> future = executorService.submit( () -> {
+//		// Liste des CompletableFuture pour les tâches asynchrones
+//		List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
 //
-//				for(Attraction attraction : attractions) {
-//					//this condition is needed to avoid useless call to reward calculation that won't be stored...
-//					if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-//						//rewards are calculated on the last Location only:
-//						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size()-1);
-//						if(nearAttraction(lastVisitedLocation, attraction)) {
-//							user.addUserReward(new UserReward(lastVisitedLocation, attraction, getRewardPoints(attraction, user)));
-//						}
+//		// Parcours des localisations visitées
+//		for (VisitedLocation visitedLocation : userLocations) {
+//			// Parcours des attractions
+//			for (Attraction attraction : attractions) {
+//				// Vérification si l'utilisateur n'a pas déjà une récompense pour cette attraction
+//				if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+//					// Vérification si l'attraction est proche de la localisation visitée
+//					if (nearAttraction(visitedLocation, attraction)) {
+//						// Création d'un CompletableFuture pour ajouter une récompense à l'utilisateur
+//						CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
+//							// Création de la récompense utilisateur
+//							UserReward userReward = new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user));
+//							// Ajout de la récompense à l'utilisateur
+//							user.addUserReward(userReward);
+//						}, executorService);
+//						// Ajout du CompletableFuture à la liste
+//						completableFutures.add(completableFuture);
 //					}
 //				}
-//			});
-//			listFuture.add(future);
+//			}
 //		}
 //
-//		listFuture.stream().forEach(f->{
-//			try {
-//				f.get();
-//			} catch (InterruptedException | ExecutionException e) {
-//
-//				e.printStackTrace();
-//			}
-//		});
-//
+//		// Attente de la complétion de tous les CompletableFuture
+//		CompletableFuture<Void> allCompletableFutures = CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0]));
+//		return allCompletableFutures;
 //	}
+
+	public void calculateRewardsMultiThread(List<User> userList) {
+		int count = 0; // Variable pour compter le nombre de fois où la boucle est exécutée
+		List<Attraction> attractions = gpsUtil.getAttractions();
+		List<Future<?>> listFuture = new ArrayList<>();
+
+		for (User user : userList) {
+			// Soumission de la tâche pour chaque utilisateur
+			Future<?> future = executorService.submit(() -> {
+				System.out.println("Soumission de la tâche pour l'utilisateur : " + user.getUserId());
+				for (Attraction attraction : attractions) {
+					// Cette condition est nécessaire pour éviter les appels inutiles au calcul de la récompense qui ne sera pas stockée...
+					if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+						// Les récompenses sont calculées uniquement sur la dernière localisation visitée :
+						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size() - 1);
+						if (nearAttraction(lastVisitedLocation, attraction)) {
+							user.addUserReward(new UserReward(lastVisitedLocation, attraction, getRewardPoints(attraction, user)));
+						}
+					}
+				}
+			});
+			listFuture.add(future);
+			count++; // Incrémente le compteur à chaque exécution
+			System.out.println("calculateRewards - Execution #" + count); // Affiche le numéro de l'exécution
+		}
+
+		listFuture.stream().forEach(f -> {
+			try {
+				f.get();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
+		});
+	}
+
 
 
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
