@@ -37,7 +37,7 @@ test:
       - .gradle
   artifacts:
     paths:
-      - "${buildDir}"/jacocoHtml
+      - $CI_PROJECT_DIR/$buildDir/jacocoHtml
 
 deploy:
   stage: deploy
