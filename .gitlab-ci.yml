@@ -40,7 +40,7 @@ test:
       - .gradle
   artifacts:
     paths:
-      - TourGuide/build/jacocoHtml
+      - TourGuide/build/jacocoHtml/
 
 deploy:
   stage: deploy
