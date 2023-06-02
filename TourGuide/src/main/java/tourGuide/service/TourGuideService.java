@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -56,7 +57,7 @@ public class TourGuideService {
 
 	public VisitedLocation getUserLocation(User user) {
 		VisitedLocation visitedLocation = (user.getVisitedLocations().size()>0)?
-				user.getLastVisitedLocation():trackUserLocation(user).join();
+				user.getLastVisitedLocation():trackUserLocation(user);
 		return visitedLocation;
 	}
 
@@ -90,34 +91,46 @@ public class TourGuideService {
 //	}
 
 
+	public VisitedLocation trackUserLocation(User user) {
+		List<User> listUser = new ArrayList<>();
+		listUser.add(user);
 
-	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
+		trackUserLocationMultiThread(listUser);
 
-		// Création d'un CompletableFuture pour la localisation visitée,
-		// CompletableFuture est une classe qui permet la programmation asynchrone et le traitement paralléle des taches.
-		// Ils permettent d'exécuter des opérations de manière asynchrone, d'enchaîner des opérations les unes après
-		// les autres et de combiner les résultats de plusieurs opérations.
-		//CompletableFuture.supplyAsync() pour une opération qui retourne une valeur
-		CompletableFuture<VisitedLocation> visitedLocationCompletableFuture = CompletableFuture.supplyAsync(() -> {
-					VisitedLocation location = gpsUtil.getUserLocation(user.getUserId());
-					return location;
-				}, executorService)
-
-				// Enchaînement asynchrone pour ajouter la localisation visitée à l'utilisateur
-				.thenApplyAsync((location) -> {
-					user.addToVisitedLocations(location);
-
-					// Calcul des récompenses pour l'utilisateur en utilisant rewardsService.calculateRewards(user)
-					//.join() est utilisé pour attendre la fin de l'execution d'un CompletableFuture dans ce cas la c'est calculateRewars(user) et recuperer la valeur du resultat
-					rewardsService.calculateRewards(user).join();
-
-					return location;
-				}, rewardsService.getExecutor());
-
-		// Retourne le CompletableFuture pour la localisation visitée
-		return visitedLocationCompletableFuture;
+		// Récupère la dernière localisation visitée par l'utilisateur
+		return user.getVisitedLocations().get(user.getVisitedLocations().size() - 1);
 	}
 
+	public void trackUserLocationMultiThread(List<User> userList) {
+		List<Future<?>> listFuture = new ArrayList<>();
+		AtomicInteger count = new AtomicInteger(); // Variable pour compter le nombre de fois où la boucle est exécutée
+
+		for (User u : userList) {
+			System.out.println("Soumission de la tâche pour l'utilisateur : " + u.getUserId());
+
+			Future<?> future = executorService.submit(() -> {
+				// Obtient la localisation de l'utilisateur à partir de GPSUtil
+				VisitedLocation visitedLocation = gpsUtil.getUserLocation(u.getUserId());
+				// Ajoute la localisation visitée à l'utilisateur
+				u.addToVisitedLocations(visitedLocation);
+			});
+
+			listFuture.add(future);
+			count.getAndIncrement(); // Incrémente le compteur à chaque exécution
+			System.out.println("trackUserLocation - Execution #" + count); // Affiche le numéro de l'exécution
+		}
+
+		listFuture.stream().forEach(f -> {
+			try {
+				f.get();
+			} catch (InterruptedException | ExecutionException e) {
+				// Gestion des exceptions
+			}
+		});
+
+		// Lancer le calcul des récompenses en multithread :
+		rewardsService.calculateRewardsMultiThread(userList);
+	}
 
 
 	public Map<String, Location> getAllCurrentLocations() {
