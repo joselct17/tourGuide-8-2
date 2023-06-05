@@ -106,7 +106,7 @@ public class TourGuideService {
 		AtomicInteger count = new AtomicInteger(); // Variable pour compter le nombre de fois où la boucle est exécutée
 
 		for (User u : userList) {
-			System.out.println("Soumission de la tâche pour l'utilisateur : " + u.getUserId());
+			//System.out.println("Soumission de la tâche pour l'utilisateur : " + u.getUserId());
 
 			Future<?> future = executorService.submit(() -> {
 				// Obtient la localisation de l'utilisateur à partir de GPSUtil
