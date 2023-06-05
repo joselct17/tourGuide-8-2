@@ -117,7 +117,7 @@ public class TourGuideService {
 
 			listFuture.add(future);
 			count.getAndIncrement(); // Incrémente le compteur à chaque exécution
-			System.out.println("trackUserLocation - Execution #" + count); // Affiche le numéro de l'exécution
+			//System.out.println("trackUserLocation - Execution #" + count); // Affiche le numéro de l'exécution
 		}
 
 		listFuture.stream().forEach(f -> {

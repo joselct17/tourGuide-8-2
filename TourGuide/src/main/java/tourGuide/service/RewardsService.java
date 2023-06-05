@@ -103,7 +103,7 @@ public class RewardsService {
 		for (User user : userList) {
 			// Soumission de la tâche pour chaque utilisateur
 			Future<?> future = executorService.submit(() -> {
-				System.out.println("Soumission de la tâche pour l'utilisateur : " + user.getUserId());
+				//System.out.println("Soumission de la tâche pour l'utilisateur : " + user.getUserId());
 				for (Attraction attraction : attractions) {
 					// Cette condition est nécessaire pour éviter les appels inutiles au calcul de la récompense qui ne sera pas stockée...
 					if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
@@ -117,7 +117,7 @@ public class RewardsService {
 			});
 			listFuture.add(future);
 			count++; // Incrémente le compteur à chaque exécution
-			System.out.println("calculateRewards - Execution #" + count); // Affiche le numéro de l'exécution
+			//System.out.println("calculateRewards - Execution #" + count); // Affiche le numéro de l'exécution
 		}
 
 		listFuture.stream().forEach(f -> {
