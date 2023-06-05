@@ -67,8 +67,8 @@ public class TourGuideController {
     }
 
     @RequestMapping("/getTripDeals")
-    public String getTripDeals(@RequestParam String userName) {
-        return JsonStream.serialize(tourGuideService.getTripDeals(getUser(userName)));
+    public List<Provider> getTripDeals(@RequestParam String userName) {
+        return tourGuideService.getTripDeals(getUser(userName));
     }
     
     private User getUser(String userName) {

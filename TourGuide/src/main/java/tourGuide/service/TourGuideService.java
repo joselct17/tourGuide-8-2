@@ -76,10 +76,15 @@ public class TourGuideService {
 	}
 	
 	public List<Provider> getTripDeals(User user) {
+
 		int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
-		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(), 
+
+		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
+
 				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulatativeRewardPoints);
+
 		user.setTripDeals(providers);
+
 		return providers;
 	}
 
@@ -103,7 +108,7 @@ public class TourGuideService {
 
 	public void trackUserLocationMultiThread(List<User> userList) {
 		List<Future<?>> listFuture = new ArrayList<>();
-		AtomicInteger count = new AtomicInteger(); // Variable pour compter le nombre de fois où la boucle est exécutée
+		//AtomicInteger count = new AtomicInteger(); // Variable pour compter le nombre de fois où la boucle est exécutée
 
 		for (User u : userList) {
 			//System.out.println("Soumission de la tâche pour l'utilisateur : " + u.getUserId());
@@ -116,7 +121,7 @@ public class TourGuideService {
 			});
 
 			listFuture.add(future);
-			count.getAndIncrement(); // Incrémente le compteur à chaque exécution
+			//count.getAndIncrement(); // Incrémente le compteur à chaque exécution
 			//System.out.println("trackUserLocation - Execution #" + count); // Affiche le numéro de l'exécution
 		}
 

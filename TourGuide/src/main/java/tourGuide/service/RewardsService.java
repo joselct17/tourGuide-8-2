@@ -96,7 +96,7 @@ public class RewardsService {
 //	}
 
 	public void calculateRewardsMultiThread(List<User> userList) {
-		int count = 0; // Variable pour compter le nombre de fois où la boucle est exécutée
+		//int count = 0; // Variable pour compter le nombre de fois où la boucle est exécutée
 		List<Attraction> attractions = gpsUtil.getAttractions();
 		List<Future<?>> listFuture = new ArrayList<>();
 
@@ -116,7 +116,7 @@ public class RewardsService {
 				}
 			});
 			listFuture.add(future);
-			count++; // Incrémente le compteur à chaque exécution
+			//count++; // Incrémente le compteur à chaque exécution
 			//System.out.println("calculateRewards - Execution #" + count); // Affiche le numéro de l'exécution
 		}
 
