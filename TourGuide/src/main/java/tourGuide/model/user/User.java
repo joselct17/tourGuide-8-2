@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
 import tripPricer.Provider;
 
@@ -48,7 +50,13 @@ public class User {
 	public String getEmailAddress() {
 		return emailAddress;
 	}
-	
+
+
+	public boolean attractionCouldBeRewarded(Attraction attraction) {
+		List<UserReward> userRewardList = new CopyOnWriteArrayList(userRewards);
+		return userRewardList.stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName));
+	}
+
 	public void setLatestLocationTimestamp(Date latestLocationTimestamp) {
 		this.latestLocationTimestamp = latestLocationTimestamp;
 	}

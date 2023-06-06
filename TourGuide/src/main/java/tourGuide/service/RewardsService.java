@@ -2,9 +2,7 @@ package tourGuide.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -95,40 +93,39 @@ public class RewardsService {
 //		return allCompletableFutures;
 //	}
 
+
 	public void calculateRewardsMultiThread(List<User> userList) {
-		//int count = 0; // Variable pour compter le nombre de fois où la boucle est exécutée
+
 		List<Attraction> attractions = gpsUtil.getAttractions();
 		List<Future<?>> listFuture = new ArrayList<>();
 
-		for (User user : userList) {
-			// Soumission de la tâche pour chaque utilisateur
-			Future<?> future = executorService.submit(() -> {
-				//System.out.println("Soumission de la tâche pour l'utilisateur : " + user.getUserId());
-				for (Attraction attraction : attractions) {
-					// Cette condition est nécessaire pour éviter les appels inutiles au calcul de la récompense qui ne sera pas stockée...
-					if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-						// Les récompenses sont calculées uniquement sur la dernière localisation visitée :
-						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size() - 1);
-						if (nearAttraction(lastVisitedLocation, attraction)) {
+		for(User user : userList) {
+			Future<?> future = executorService.submit( () -> {
+
+				for(Attraction attraction : attractions) {
+					//this condition is needed to avoid useless call to reward calculation that won't be stored...
+					if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+						//rewards are calculated on the last Location only:
+						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size()-1);
+						if(nearAttraction(lastVisitedLocation, attraction)) {
 							user.addUserReward(new UserReward(lastVisitedLocation, attraction, getRewardPoints(attraction, user)));
 						}
 					}
 				}
 			});
 			listFuture.add(future);
-			//count++; // Incrémente le compteur à chaque exécution
-			//System.out.println("calculateRewards - Execution #" + count); // Affiche le numéro de l'exécution
 		}
 
-		listFuture.stream().forEach(f -> {
+		listFuture.stream().forEach(f->{
 			try {
 				f.get();
 			} catch (InterruptedException | ExecutionException e) {
+
 				e.printStackTrace();
 			}
 		});
-	}
 
+	}
 
 
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {

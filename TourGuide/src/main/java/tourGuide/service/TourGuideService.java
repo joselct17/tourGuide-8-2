@@ -79,9 +79,13 @@ public class TourGuideService {
 
 		int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
 
-		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
+		List<Provider> providers = tripPricer.getPrice(tripPricerApiKey,
+				user.getUserId(),
+				user.getUserPreferences().getNumberOfAdults(),
 
-				user.getUserPreferences().getNumberOfChildren(), user.getUserPreferences().getTripDuration(), cumulatativeRewardPoints);
+				user.getUserPreferences().getNumberOfChildren(),
+				user.getUserPreferences().getTripDuration(),
+				cumulatativeRewardPoints);
 
 		user.setTripDeals(providers);
 
@@ -107,34 +111,29 @@ public class TourGuideService {
 	}
 
 	public void trackUserLocationMultiThread(List<User> userList) {
+
 		List<Future<?>> listFuture = new ArrayList<>();
-		//AtomicInteger count = new AtomicInteger(); // Variable pour compter le nombre de fois où la boucle est exécutée
+		for(User u: userList) {
+			Future<?> future = executorService.submit( () -> {
 
-		for (User u : userList) {
-			//System.out.println("Soumission de la tâche pour l'utilisateur : " + u.getUserId());
-
-			Future<?> future = executorService.submit(() -> {
-				// Obtient la localisation de l'utilisateur à partir de GPSUtil
 				VisitedLocation visitedLocation = gpsUtil.getUserLocation(u.getUserId());
-				// Ajoute la localisation visitée à l'utilisateur
 				u.addToVisitedLocations(visitedLocation);
 			});
-
 			listFuture.add(future);
-			//count.getAndIncrement(); // Incrémente le compteur à chaque exécution
-			//System.out.println("trackUserLocation - Execution #" + count); // Affiche le numéro de l'exécution
 		}
 
-		listFuture.stream().forEach(f -> {
+		listFuture.stream().forEach(f->{
 			try {
 				f.get();
 			} catch (InterruptedException | ExecutionException e) {
-				// Gestion des exceptions
+
+
 			}
 		});
 
-		// Lancer le calcul des récompenses en multithread :
+		//launch multithreaded calculateRewards:
 		rewardsService.calculateRewardsMultiThread(userList);
+
 	}
 
 
