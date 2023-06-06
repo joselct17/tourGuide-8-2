@@ -95,19 +95,20 @@ public class RewardsService {
 
 
 	public void calculateRewardsMultiThread(List<User> userList) {
-
+		// Obtention de la liste des attractions à partir de GPSUtil
 		List<Attraction> attractions = gpsUtil.getAttractions();
 		List<Future<?>> listFuture = new ArrayList<>();
 
-		for(User user : userList) {
-			Future<?> future = executorService.submit( () -> {
-
-				for(Attraction attraction : attractions) {
-					//this condition is needed to avoid useless call to reward calculation that won't be stored...
-					if(user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
-						//rewards are calculated on the last Location only:
-						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size()-1);
-						if(nearAttraction(lastVisitedLocation, attraction)) {
+		// Soumission des tâches de calcul des récompenses pour chaque utilisateur
+		for (User user : userList) {
+			Future<?> future = executorService.submit(() -> {
+				for (Attraction attraction : attractions) {
+					// Cette condition est nécessaire pour éviter les appels inutiles au calcul de récompenses qui ne seront pas stockées
+					if (user.getUserRewards().stream().noneMatch(r -> r.attraction.attractionName.equals(attraction.attractionName))) {
+						// Les récompenses sont calculées uniquement sur la dernière localisation visitée
+						VisitedLocation lastVisitedLocation = user.getVisitedLocations().get(user.getVisitedLocations().size() - 1);
+						if (nearAttraction(lastVisitedLocation, attraction)) {
+							// Ajout de la récompense à l'utilisateur
 							user.addUserReward(new UserReward(lastVisitedLocation, attraction, getRewardPoints(attraction, user)));
 						}
 					}
@@ -116,16 +117,16 @@ public class RewardsService {
 			listFuture.add(future);
 		}
 
-		listFuture.stream().forEach(f->{
+		// Attente de la fin de toutes les tâches de calcul des récompenses
+		listFuture.stream().forEach(f -> {
 			try {
-				f.get();
+				f.get(); // Attend la fin de la tâche
 			} catch (InterruptedException | ExecutionException e) {
-
-				e.printStackTrace();
+				e.printStackTrace(); // Affiche la trace de l'erreur
 			}
 		});
-
 	}
+
 
 
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {

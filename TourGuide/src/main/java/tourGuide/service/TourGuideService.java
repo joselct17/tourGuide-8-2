@@ -111,30 +111,33 @@ public class TourGuideService {
 	}
 
 	public void trackUserLocationMultiThread(List<User> userList) {
-
+		// Liste pour stocker les futures
 		List<Future<?>> listFuture = new ArrayList<>();
-		for(User u: userList) {
-			Future<?> future = executorService.submit( () -> {
 
+		// Soumission des tâches de suivi de localisation pour chaque utilisateur
+		for (User u : userList) {
+			Future<?> future = executorService.submit(() -> {
+				// Obtention de la localisation de l'utilisateur à partir de GPSUtil
 				VisitedLocation visitedLocation = gpsUtil.getUserLocation(u.getUserId());
+				// Ajout de la localisation visitée à l'utilisateur
 				u.addToVisitedLocations(visitedLocation);
 			});
 			listFuture.add(future);
 		}
 
-		listFuture.stream().forEach(f->{
+		// Attente de la fin de toutes les tâches de suivi de localisation
+		listFuture.stream().forEach(f -> {
 			try {
-				f.get();
+				f.get(); // Attend la fin de la tâche
 			} catch (InterruptedException | ExecutionException e) {
-
-
+				e.printStackTrace();// Affiche la trace de l'erreur
 			}
 		});
 
-		//launch multithreaded calculateRewards:
+		// Lancement du calcul des récompenses en multithreading
 		rewardsService.calculateRewardsMultiThread(userList);
-
 	}
+
 
 
 	public Map<String, Location> getAllCurrentLocations() {
