@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -35,7 +34,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	private final ExecutorService executorService = Executors.newFixedThreadPool(60);
 	
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
 		this.gpsUtil = gpsUtil;
@@ -57,9 +56,11 @@ public class TourGuideService {
 
 	public VisitedLocation getUserLocation(User user) {
 		VisitedLocation visitedLocation = (user.getVisitedLocations().size()>0)?
-				user.getLastVisitedLocation():trackUserLocation(user);
+				user.getLastVisitedLocation():trackUserLocation(user).join();
 		return visitedLocation;
 	}
+
+
 
 	public User getUser(String userName) {
 		return internalUserMap.get(userName);
@@ -92,50 +93,25 @@ public class TourGuideService {
 		return providers;
 	}
 
-//	public VisitedLocation trackUserLocation(User user) {
-//		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-//		user.addToVisitedLocations(visitedLocation);
-//		rewardsService.calculateRewards(user);
-//		return visitedLocation;
-//	}
+	public CompletableFuture<Void> trackAllUserLocation(List<User> users) {
 
-
-	public VisitedLocation trackUserLocation(User user) {
-		List<User> listUser = new ArrayList<>();
-		listUser.add(user);
-
-		trackUserLocationMultiThread(listUser);
-
-		// Récupère la dernière localisation visitée par l'utilisateur
-		return user.getVisitedLocations().get(user.getVisitedLocations().size() - 1);
+		List<CompletableFuture<VisitedLocation>> completableFutures = users.stream()
+				.map(user -> this.trackUserLocation(user))
+				.collect(Collectors.toList());
+		return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[completableFutures.size()]));
 	}
 
-	public void trackUserLocationMultiThread(List<User> userList) {
-		// Liste pour stocker les futures
-		List<Future<?>> listFuture = new ArrayList<>();
+	public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
 
-		// Soumission des tâches de suivi de localisation pour chaque utilisateur
-		for (User u : userList) {
-			Future<?> future = executorService.submit(() -> {
-				// Obtention de la localisation de l'utilisateur à partir de GPSUtil
-				VisitedLocation visitedLocation = gpsUtil.getUserLocation(u.getUserId());
-				// Ajout de la localisation visitée à l'utilisateur
-				u.addToVisitedLocations(visitedLocation);
-			});
-			listFuture.add(future);
-		}
+		return CompletableFuture.supplyAsync(() -> {
+			VisitedLocation visitedLocation = this.gpsUtil.getUserLocation(user.getUserId());
+			user.addToVisitedLocations(visitedLocation);
 
-		// Attente de la fin de toutes les tâches de suivi de localisation
-		listFuture.stream().forEach(f -> {
-			try {
-				f.get(); // Attend la fin de la tâche
-			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();// Affiche la trace de l'erreur
-			}
-		});
-
-		// Lancement du calcul des récompenses en multithreading
-		rewardsService.calculateRewardsMultiThread(userList);
+			return visitedLocation;
+		}, this.executorService).thenApplyAsync((visitedLocation) -> {
+			rewardsService.calculateRewards(user);
+			return visitedLocation;
+		}, this.executorService);
 	}
 
 
@@ -147,6 +123,7 @@ public class TourGuideService {
 		);
 		return mapUserUuidLocation;
 	}
+
 
 	public ListOfFiveAttractionsCloseToUser getNearByAttractions(VisitedLocation visitedLocation) {
 
@@ -261,5 +238,4 @@ public class TourGuideService {
 	}
 
 
-	
 }

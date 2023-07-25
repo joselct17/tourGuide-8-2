@@ -6,11 +6,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import gpsUtil.GpsUtil;
 import org.apache.commons.lang3.time.StopWatch;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import gpsUtil.location.Attraction;
@@ -50,15 +48,17 @@ public class TestPerformance {
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 		// Users should be incremented up to 100,000, and test finishes within 15 minutes
-		InternalTestHelper.setInternalUserNumber(10);
+		InternalTestHelper.setInternalUserNumber(1000);
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
-		List<User> allUsers =tourGuideService.getAllUsers();
+		List<User> allUsers = tourGuideService.getAllUsers();
 
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
-			tourGuideService.trackUserLocationMultiThread(allUsers);
+
+			tourGuideService.trackAllUserLocation(allUsers).join();
+
 
 		stopWatch.stop();
 		tourGuideService.tracker.stopTracking();
@@ -68,36 +68,33 @@ public class TestPerformance {
 	}
 
 
-
 	@Test
-	public void highVolumeGetRewardss() {
-
+	public void highVolumeGetRewards() {
 		GpsUtil gpsUtil = new GpsUtil();
 		RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
+
 		// Users should be incremented up to 100,000, and test finishes within 20 minutes
-		InternalTestHelper.setInternalUserNumber(100);
+		InternalTestHelper.setInternalUserNumber(10);
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+
 		Attraction attraction = gpsUtil.getAttractions().get(0);
 		List<User> allUsers = tourGuideService.getAllUsers();
 		allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(), attraction, new Date())));
 
-		//ACT:
-		StopWatch stopWatch = new StopWatch();
-		stopWatch.start();
 
-		//multithread:
-		rewardsService.calculateRewardsMultiThread(allUsers);
-		stopWatch.stop();
+		allUsers.forEach(rewardsService::calculateRewards);
 
-
-		//ASSERT:
 		for(User user : allUsers) {
 			assertTrue(user.getUserRewards().size() > 0);
 		}
-		System.out.println("highVolumeGetRewars: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
+		stopWatch.stop();
+		tourGuideService.tracker.stopTracking();
+
+		System.out.println("highVolumeGetRewards: Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
 		assertTrue(TimeUnit.MINUTES.toSeconds(20) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
 	}
-
 
 
 }
